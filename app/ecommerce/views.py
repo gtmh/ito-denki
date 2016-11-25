@@ -81,7 +81,7 @@ def cart_reset(request):
 
     products = get_list_or_404(Product)
 
-    response = redirect('/ec/list/', {'products': products})
+    response = redirect('../cart_list/', {'products': products})
 
     return response
 
