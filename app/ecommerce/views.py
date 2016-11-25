@@ -119,8 +119,15 @@ def order(request):
         request.session['cart'] = {}
     cart = request.session['cart']
 
+    product_ids = []
+    if cart:
+        product_ids = cart.keys()
+
     #   カートに入っている商品の情報を取得します
-    products = Product.objects.filter(id__in=cart)
+    products = Product.objects.filter(id__in=product_ids)
+    for product in products:
+        product.price = product.price * cart[str(product.id)]
+        product.num = cart[str(product.id)]
 
     #   決済方法を取得します。
     payments = get_list_or_404(Payment)
@@ -157,11 +164,15 @@ def order_execute(request):
         request.session['cart'] = {}
     cart = request.session['cart']
 
+    product_ids = []
+    if cart:
+        product_ids = cart.keys()
+
     #   カートに入っている商品の情報を取得します
-    products = Product.objects.filter(id__in=cart)
+    products = Product.objects.filter(id__in=product_ids)
 
     for product in products:
-        order_product = Order_Product(order=order, product=product, count=1, price=product.price)
+        order_product = Order_Product(order=order, product=product, count=cart[str(product.id)], price=product.price * cart[str(product.id)])
         order_product.save()
 
     #   注文完了画面にリダイレクトします。
