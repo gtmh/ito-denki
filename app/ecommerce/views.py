@@ -14,7 +14,7 @@ def index(request):
 
     #   セッションにカートの情報を格納するListを定義します。
     if not request.session.has_key('cart'):
-        request.session['cart'] = list()
+        request.session['cart'] = {}
 
     response = render(request, 'product_list.html', {'products': products})
 
@@ -28,9 +28,17 @@ def cart_add(request, product_id):
 
     #   カート(セッション)に商品を追加します。
     if not request.session.has_key('cart'):
-        request.session['cart'] = list()
+        request.session['cart'] = {}
     cart = request.session['cart']
-    cart.append(product_id)
+
+    product_num = 0
+    if product_id in cart:
+        product_num = cart[product_id]
+        product_num = product_num + 1
+        cart[product_id] = product_num
+    else:
+        cart[product_id] = 1
+
     request.session['cart'] = cart
 
     products = get_list_or_404(Product)
@@ -68,7 +76,7 @@ def cart_reset(request):
 
     #   カート(セッション)からすべての商品を削除します。
     if not request.session.has_key('cart'):
-        request.session['cart'] = list()
+        request.session['cart'] = {}
     del request.session['cart']
 
     products = get_list_or_404(Product)
@@ -85,11 +93,18 @@ def cart_list(request):
 
     #   カート(セッション)内にある商品IDを取得します。
     if not request.session.has_key('cart'):
-        request.session['cart'] = list()
+        request.session['cart'] = {}
     cart = request.session['cart']
 
     #   カートに入っている商品の情報を取得します
-    products = Product.objects.filter(id__in=cart)
+    product_ids = []
+    if cart:
+        product_ids = cart.keys()
+
+    products = Product.objects.filter(id__in=product_ids)
+    for product in products:
+        product.price = product.price * cart[str(product.id)]
+        product.num = cart[str(product.id)]
 
     return render(request, 'cart_list.html', {'products': products})
 
@@ -101,7 +116,7 @@ def order(request):
 
     #   カート(セッション)内にある商品IDを取得します。
     if not request.session.has_key('cart'):
-        request.session['cart'] = list()
+        request.session['cart'] = {}
     cart = request.session['cart']
 
     #   カートに入っている商品の情報を取得します
@@ -139,7 +154,7 @@ def order_execute(request):
 
     #   カート(セッション)内にある商品IDを取得します。
     if not request.session.has_key('cart'):
-        request.session['cart'] = list()
+        request.session['cart'] = {}
     cart = request.session['cart']
 
     #   カートに入っている商品の情報を取得します
